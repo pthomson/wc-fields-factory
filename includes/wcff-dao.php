@@ -363,8 +363,6 @@ class Wcff_Dao {
 			'grouped'  => __( 'Grouped product', 'woocommerce' ),
 			'external' => __( 'External/Affiliate product', 'woocommerce' ),
 			'variable' => __( 'Variable product', 'woocommerce' ),
-            'lesson_product' => __( 'Lesson product', 'woocommerce' ),
-            'general_pos_product'=> __( 'General POS product', 'woocommerce' ),
 		);
 
 		foreach ( $all_types as $key => $value ) {
@@ -776,9 +774,9 @@ class Wcff_Dao {
 						$ands[] = ( $rule[ "logic" ] == "==" );
 					} else {
 						if ( $rule[ "logic" ] == "==" ) {
-							$ands[] = has_term( $rule[ "endpoint" ], 'product_cat', $_pid );
+							$ands[] = $this->check_for_product_in_product_category( $rule[ "endpoint" ],  $_pid );
 						} else {
-							$ands[] = !has_term( $rule[ "endpoint" ], 'product_cat', $_pid );
+							$ands[] = !$this->check_for_product_in_product_category( $rule[ "endpoint" ],  $_pid );
 						}
 					}
 				}  else if ( $rule[ "context" ] == "product_tag" ) {
@@ -809,6 +807,23 @@ class Wcff_Dao {
 
 		return in_array( true, $final_matches );
 	}
+
+    /**
+     *
+     * This function uses a more direct check to see if a Product exists in a given Product Category
+     * Needed to override the default behavior due to overriding pre_get_post in another plugin.
+     * in that plugin, we are hiding some categories through a custom Meta field and so if the product category
+     * is hidden then the Product cannot be found through a Get_Post call.
+     * here is that plugin  https://wordpress.org/plugins/moodgiver-hide-shop-categories/
+     *
+     */
+    function check_for_product_in_product_category(  $term , $prodid   ) {
+        $r = is_object_in_term( $prodid, 'product_cat', $term );
+        if ( is_wp_error( $r ) ) {
+            return false;
+        }
+        return $r;
+    }
 
 	/**
 	 *
